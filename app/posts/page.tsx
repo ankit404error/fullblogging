@@ -13,14 +13,11 @@ export default function Posts() {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // TRPC queries
   const { data: posts = [], isLoading: postsLoading, isError: postsError } = trpc.post.all.useQuery();
   const { data: categories = [], isLoading: categoriesLoading, isError: categoriesError } = trpc.category.all.useQuery();
 
   const isLoading = postsLoading || categoriesLoading;
   const isError = postsError || categoriesError;
-
-  // Filter and sort posts
   const filteredAndSortedPosts = posts
     .filter((post: any) => {
       const matchesCategory = selectedCategory 
@@ -100,7 +97,6 @@ export default function Posts() {
             </button>
           </div>
 
-          {/* Mobile menu */}
           {isMobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700 animate-slide-in">
               <Link 

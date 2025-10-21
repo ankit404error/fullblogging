@@ -11,11 +11,8 @@ export default function Dashboard() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string } | null>(null);
 
-  // TRPC queries
   const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = trpc.post.all.useQuery();
   const { data: categories = [], isLoading: categoriesLoading, refetch: refetchCategories } = trpc.category.all.useQuery();
-
-  // TRPC mutations
   const deletePost = trpc.post.delete.useMutation({
     onSuccess: () => refetchPosts(),
   });
@@ -38,7 +35,6 @@ export default function Dashboard() {
     onSuccess: () => refetchCategories(),
   });
 
-  // Filter posts
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.content.toLowerCase().includes(searchTerm.toLowerCase());
@@ -88,7 +84,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -115,7 +110,6 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center">
@@ -148,7 +142,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex space-x-8 px-6">
@@ -178,7 +171,6 @@ export default function Dashboard() {
           <div className="p-6">
             {activeTab === 'posts' ? (
               <div>
-                {/* Search and Filter */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -204,7 +196,6 @@ export default function Dashboard() {
                   </select>
                 </div>
 
-                {/* Posts List */}
                 {filteredPosts.length === 0 ? (
                   <div className="text-center py-12">
                     <BookOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -260,7 +251,6 @@ export default function Dashboard() {
               </div>
             ) : (
               <div>
-                {/* Create New Category */}
                 <form onSubmit={handleCreateCategory} className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Create New Category</h3>
                   <div className="flex gap-3">
@@ -282,7 +272,6 @@ export default function Dashboard() {
                   </div>
                 </form>
 
-                {/* Categories List */}
                 {categories.length === 0 ? (
                   <div className="text-center py-12">
                     <Tag className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />

@@ -4,14 +4,20 @@ import { posts } from "../../lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc";
 
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
 export const postRouter = router({
-  // Fetch all posts
   all: publicProcedure.query(async () => {
-    console.log("Fetching all posts");
     return await db.query.posts.findMany();
   }),
 
-  // Fetch a post by ID
   byId: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
@@ -20,7 +26,6 @@ export const postRouter = router({
       });
     }),
 
-  // Fetch posts by category
   byCategory: publicProcedure
     .input(z.object({ categoryId: z.number() }))
     .query(async ({ input }) => {
@@ -29,44 +34,27 @@ export const postRouter = router({
       });
     }),
 
-  // Create a new post
   create: publicProcedure
-    .input(
-      z.object({
-        title: z.string(),
-        content: z.string(),
-        categoryId: z.number().optional(),
-      })
-    )
+    .input(z.object({
+      title: z.string(),
+      content: z.string(),
+      categoryId: z.number().optional(),
+    }))
     .mutation(async ({ input }) => {
-      const slug = input.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
-      
+      const slug = generateSlug(input.title);
       const [newPost] = await db.insert(posts).values({ ...input, slug }).returning();
       return newPost;
     }),
 
-  // Update a post
   update: publicProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        title: z.string(),
-        content: z.string(),
-        categoryId: z.number().optional(),
-      })
-    )
+    .input(z.object({
+      id: z.number(),
+      title: z.string(),
+      content: z.string(),
+      categoryId: z.number().optional(),
+    }))
     .mutation(async ({ input }) => {
-      const slug = input.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      const slug = generateSlug(input.title);
       const [updatedPost] = await db
         .update(posts)
         .set({
@@ -80,7 +68,6 @@ export const postRouter = router({
       return updatedPost;
     }),
 
-  // Delete a post
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {

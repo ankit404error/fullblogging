@@ -33,16 +33,12 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
   const [title, setTitle] = useState(editingPost?.title || '');
   const [content, setContent] = useState(editingPost?.content || '');
   const [categoryId, setCategoryId] = useState(editingPost?.categoryId?.toString() ?? '');
-  // Remove local isLoading state - will use mutation states
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPreview, setShowPreview] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
-  // Remove local isCreatingCategory state - will use mutation state
-
-  // TRPC mutations
   const createPost = trpc.post.create.useMutation();
   const updatePost = trpc.post.update.useMutation();
   const createCategory = trpc.category.create.useMutation();
@@ -86,24 +82,20 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
     return Object.keys(newErrors).length === 0;
   };
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
     setErrors({});
     
     try {
-      let finalCategoryId = categoryId;
+      let selectedCategoryId = categoryId;
       
-      // If creating a new category, create it first
       if (categoryId === 'new' && newCategoryName.trim()) {
         const newCategory = await createCategory.mutateAsync({ name: newCategoryName.trim() });
-        finalCategoryId = newCategory.id.toString();
+        selectedCategoryId = newCategory.id.toString();
         
-        // Update categories list with new category
         if (onCategoryCreated) {
           onCategoryCreated(newCategory);
         }
@@ -112,7 +104,7 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       const postData = {
         title: title.trim(), 
         content: content.trim(), 
-        categoryId: finalCategoryId ? parseInt(finalCategoryId) : undefined,
+        categoryId: selectedCategoryId ? parseInt(selectedCategoryId) : undefined,
       };
       
       if (editingPost) {
@@ -124,12 +116,7 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       }
       
       if (!editingPost) {
-        setTitle('');
-        setContent('');
-        setCategoryId('');
-        setIsDraft(false);
-        setNewCategoryName('');
-        setShowNewCategoryInput(false);
+        resetForm();
       }
       
       setTimeout(() => {
@@ -140,7 +127,16 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
     } catch (error) {
       setErrors({ title: editingPost ? 'Failed to update post. Please try again.' : 'Failed to create post. Please try again.' });
     }
-  }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setCategoryId('');
+    setIsDraft(false);
+    setNewCategoryName('');
+    setShowNewCategoryInput(false);
+  };
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim() || newCategoryName.trim().length < 2) {
@@ -150,27 +146,24 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
 
     setErrors(prev => ({ ...prev, newCategory: undefined }));
 
-    try {
-      const newCategory = await createCategory.mutateAsync({ name: newCategoryName.trim() });
-      
-      // Update categories list with new category
-      if (onCategoryCreated) {
-        onCategoryCreated(newCategory);
-      }
-      
-      // Set the new category as selected
-      setCategoryId(newCategory.id.toString());
-      setShowNewCategoryInput(false);
-      setNewCategoryName('');
-      
-      // Show success message briefly
-      const tempMessage = `Category "${newCategory.name}" created successfully!`;
-      setSuccessMessage(tempMessage);
-      setTimeout(() => {
-        if (successMessage === tempMessage) {
-          setSuccessMessage('');
+      try {
+        const newCategory = await createCategory.mutateAsync({ name: newCategoryName.trim() });
+        
+        if (onCategoryCreated) {
+          onCategoryCreated(newCategory);
         }
-      }, 3000);
+        
+        setCategoryId(newCategory.id.toString());
+        setShowNewCategoryInput(false);
+        setNewCategoryName('');
+        
+        const tempMessage = `Category "${newCategory.name}" created successfully!`;
+        setSuccessMessage(tempMessage);
+        setTimeout(() => {
+          if (successMessage === tempMessage) {
+            setSuccessMessage('');
+          }
+        }, 3000);
     } catch (error) {
       setErrors(prev => ({ ...prev, newCategory: 'Failed to create category. Please try again.' }));
     }
