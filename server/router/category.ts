@@ -19,8 +19,10 @@ export const categoryRouter = router({
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .trim('-'); // Remove leading/trailing hyphens
-      return await db.insert(categories).values({ ...input, slug });
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      
+      const [newCategory] = await db.insert(categories).values({ ...input, slug }).returning();
+      return newCategory;
     }),
 
   // Update a category
@@ -32,11 +34,13 @@ export const categoryRouter = router({
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .trim('-'); // Remove leading/trailing hyphens
-      return await db
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      const [updatedCategory] = await db
         .update(categories)
         .set({ name: input.name, slug })
-        .where(eq(categories.id, input.id));
+        .where(eq(categories.id, input.id))
+        .returning();
+      return updatedCategory;
     }),
 
   // Delete a category

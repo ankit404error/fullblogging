@@ -178,7 +178,11 @@ export default function Posts() {
 
           <CategoryFilter
             categories={categories} 
-            onSelect={setSelectedCategory}
+            onSelect={(categoryId) => {
+              if (typeof categoryId === 'string') {
+                setSelectedCategory(categoryId);
+              }
+            }}
             showSearch={false}
           />
 

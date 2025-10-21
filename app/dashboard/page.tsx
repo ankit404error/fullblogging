@@ -247,7 +247,7 @@ export default function Dashboard() {
                               onClick={() => handleDeletePost(post.id)}
                               className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition-colors"
                               title="Delete post"
-                              disabled={deletePost.isLoading}
+                              disabled={deletePost.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -274,10 +274,10 @@ export default function Dashboard() {
                     />
                     <button
                       type="submit"
-                      disabled={createCategory.isLoading || !newCategoryName.trim()}
+                      disabled={createCategory.isPending || !newCategoryName.trim()}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
                     >
-                      {createCategory.isLoading ? 'Creating...' : 'Create'}
+                      {createCategory.isPending ? 'Creating...' : 'Create'}
                     </button>
                   </div>
                 </form>
@@ -304,7 +304,7 @@ export default function Dashboard() {
                             />
                             <button
                               type="submit"
-                              disabled={updateCategory.isLoading}
+                              disabled={updateCategory.isPending}
                               className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm"
                             >
                               Save
@@ -337,7 +337,7 @@ export default function Dashboard() {
                                 onClick={() => handleDeleteCategory(category.id)}
                                 className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition-colors"
                                 title="Delete category"
-                                disabled={deleteCategory.isLoading}
+                                disabled={deleteCategory.isPending}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>

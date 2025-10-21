@@ -44,8 +44,10 @@ export const postRouter = router({
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .trim('-'); // Remove leading/trailing hyphens
-      return await db.insert(posts).values({ ...input, slug });
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      
+      const [newPost] = await db.insert(posts).values({ ...input, slug }).returning();
+      return newPost;
     }),
 
   // Update a post
@@ -64,8 +66,8 @@ export const postRouter = router({
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-        .trim('-'); // Remove leading/trailing hyphens
-      return await db
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+      const [updatedPost] = await db
         .update(posts)
         .set({
           title: input.title,
@@ -73,7 +75,9 @@ export const postRouter = router({
           categoryId: input.categoryId,
           slug,
         })
-        .where(eq(posts.id, input.id));
+        .where(eq(posts.id, input.id))
+        .returning();
+      return updatedPost;
     }),
 
   // Delete a post

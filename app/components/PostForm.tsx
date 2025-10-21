@@ -12,7 +12,7 @@ interface Post {
   id: number;
   title: string;
   content: string;
-  categoryId?: number;
+  categoryId?: number | null;
 }
 
 interface PostFormProps {
@@ -32,15 +32,15 @@ interface FormErrors {
 export default function PostForm({ categories, onSuccess, onCategoryCreated, editingPost }: PostFormProps) {
   const [title, setTitle] = useState(editingPost?.title || '');
   const [content, setContent] = useState(editingPost?.content || '');
-  const [categoryId, setCategoryId] = useState(editingPost?.categoryId?.toString() || '');
-  const [isLoading, setIsLoading] = useState(false);
+  const [categoryId, setCategoryId] = useState(editingPost?.categoryId?.toString() ?? '');
+  // Remove local isLoading state - will use mutation states
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPreview, setShowPreview] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  // Remove local isCreatingCategory state - will use mutation state
 
   // TRPC mutations
   const createPost = trpc.post.create.useMutation();
@@ -51,7 +51,7 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
     if (editingPost) {
       setTitle(editingPost.title);
       setContent(editingPost.content);
-      setCategoryId(editingPost.categoryId?.toString() || '');
+      setCategoryId(editingPost.categoryId?.toString() ?? '');
     }
   }, [editingPost]);
 
@@ -93,7 +93,6 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       return;
     }
     
-    setIsLoading(true);
     setErrors({});
     
     try {
@@ -140,8 +139,6 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       
     } catch (error) {
       setErrors({ title: editingPost ? 'Failed to update post. Please try again.' : 'Failed to create post. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -151,7 +148,6 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       return;
     }
 
-    setIsCreatingCategory(true);
     setErrors(prev => ({ ...prev, newCategory: undefined }));
 
     try {
@@ -177,8 +173,6 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
       }, 3000);
     } catch (error) {
       setErrors(prev => ({ ...prev, newCategory: 'Failed to create category. Please try again.' }));
-    } finally {
-      setIsCreatingCategory(false);
     }
   };
 
@@ -302,15 +296,15 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
                   <button
                     type="button"
                     onClick={handleCreateCategory}
-                    disabled={isCreatingCategory || !newCategoryName.trim()}
+                    disabled={createCategory.isPending || !newCategoryName.trim()}
                     className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed"
                   >
-                    {isCreatingCategory ? (
+                    {createCategory.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Plus className="w-4 h-4" />
                     )}
-                    {isCreatingCategory ? 'Creating...' : 'Create Category'}
+                    {createCategory.isPending ? 'Creating...' : 'Create Category'}
                   </button>
                   <button
                     type="button"
@@ -404,17 +398,17 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={createPost.isPending || updatePost.isPending}
             className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-blue-500 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 hover:shadow-lg disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            {isLoading ? (
+            {(createPost.isPending || updatePost.isPending) ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : isDraft ? (
               <Save className="w-5 h-5" />
             ) : (
               <Send className="w-5 h-5" />
             )}
-            {isLoading ? 'Saving...' : editingPost ? 'Update Post' : isDraft ? 'Save Draft' : 'Publish Post'}
+            {(createPost.isPending || updatePost.isPending) ? 'Saving...' : editingPost ? 'Update Post' : isDraft ? 'Save Draft' : 'Publish Post'}
           </button>
           
           <button
@@ -423,7 +417,7 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
               if (editingPost) {
                 setTitle(editingPost.title);
                 setContent(editingPost.content);
-                setCategoryId(editingPost.categoryId?.toString() || '');
+                setCategoryId(editingPost.categoryId?.toString() ?? '');
               } else {
                 setTitle('');
                 setContent('');
@@ -434,7 +428,7 @@ export default function PostForm({ categories, onSuccess, onCategoryCreated, edi
               setNewCategoryName('');
               setShowNewCategoryInput(false);
             }}
-            disabled={isLoading}
+            disabled={createPost.isPending || updatePost.isPending}
             className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200 font-medium disabled:cursor-not-allowed"
           >
             {editingPost ? 'Reset Changes' : 'Clear Form'}
